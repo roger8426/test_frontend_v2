@@ -3,6 +3,10 @@
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
+  ssr: false, // GitHub Pages 需要靜態生成
+  app: {
+    baseURL: process.env.NODE_ENV === 'production' ? '/test_frontend_v2/' : '/',
+  },
 
   modules: ['@nuxtjs/i18n', '@pinia/nuxt', '@nuxt/image', '@unocss/nuxt', '@nuxtjs/google-fonts'],
 
