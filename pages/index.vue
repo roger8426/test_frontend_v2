@@ -7,14 +7,14 @@
       <form class="form-content" @submit.prevent>
         <div class="form-group">
           <label for="name">{{ t('name') }}</label>
-          <ETextField v-model="store.formData.name" />
+          <ETextField v-model:value="store.formData.name" />
           <span v-if="getFieldError('name')" class="error-text">
             {{ getFieldError('name') }}
           </span>
         </div>
         <div class="form-group">
           <label for="age">{{ t('age') }}</label>
-          <ETextField v-model="store.formData.age" type="number" />
+          <ETextField v-model:value="store.formData.age" type="number" />
           <span v-if="getFieldError('age')" class="error-text">
             {{ getFieldError('age') }}
           </span>
@@ -91,7 +91,6 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore, type DialogType } from '~/store/app'
 import type { ValidationError } from '~/utils/validate'
-import type { User } from '~/type/type'
 import EBtn from '~/components/EBtn.vue'
 import ETextField from '~/components/ETextField.vue'
 import EDialog from '~/components/EDialog.vue'
@@ -101,8 +100,9 @@ const store = useAppStore()
 const deleteUserId = ref<number | null>(null)
 
 // 初始化數據
-onMounted(() => {
-  store.getDataList()
+useAsyncData('tableData', async () => {
+  await store.getDataList()
+  return true
 })
 
 // 獲取字段錯誤信息

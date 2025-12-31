@@ -3,10 +3,9 @@
     <label v-if="label" :for="computedId" class="e-label">{{ label }}</label>
     <input
       :id="computedId"
-      :value="modelValue"
+      v-model="inputValue"
       :type="type"
       class="e-input"
-      @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
     />
   </div>
 </template>
@@ -20,8 +19,13 @@ const props = withDefaults(defineProps<InputProps>(), {
 })
 
 const emit = defineEmits<{
-  'update:modelValue': [value: string]
+  'update:value': [value: string]
 }>()
+
+const inputValue = computed({
+  get: () => props.value || '',
+  set: (newValue: string) => emit('update:value', newValue)
+})
 
 const generatedId = ref<string>('')
 

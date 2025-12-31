@@ -1,5 +1,5 @@
 <template>
-  <button :class="['e-btn', `e-btn-${color}`]" :disabled="store.loading">
+  <button :class="['e-btn', `e-btn-${color}`]" :disabled="disabled">
     {{ text || '' }}
     <slot />
   </button>
@@ -7,13 +7,11 @@
 
 <script setup lang="ts">
 import type { ButtonProps } from '~/type/type'
-import { useAppStore } from '~/store/app'
 
 const props = withDefaults(defineProps<ButtonProps>(), {
   color: 'success',
+  disabled: false,
 })
-
-const store = useAppStore()
 </script>
 
 <style scoped lang="scss">

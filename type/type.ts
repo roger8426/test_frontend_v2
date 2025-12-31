@@ -7,11 +7,12 @@ export interface User {
 export interface InputProps {
   id?: string
   label?: string
-  modelValue?: string | number
+  value?: string | number
   type?: string
 }
 
 export interface ButtonProps {
   text?: string
   color?: 'success' | 'error' | 'warn'
+  disabled?: boolean
 }
