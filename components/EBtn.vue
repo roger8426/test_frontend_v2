@@ -1,19 +1,19 @@
 <template>
-  <button :class="['e-btn', `e-btn-${color}`]">
+  <button :class="['e-btn', `e-btn-${color}`]" :disabled="store.loading">
     {{ text || '' }}
     <slot />
   </button>
 </template>
 
 <script setup lang="ts">
-interface Props {
-  text?: string // 若有輸入時以此為主，若沒有就顯示 slot
-  color?: 'success' | 'error' | 'warn' // 預設為 success
-}
+import type { ButtonProps } from '~/type/type'
+import { useAppStore } from '~/store/app'
 
-const props = withDefaults(defineProps<Props>(), {
-  color: 'success'
+const props = withDefaults(defineProps<ButtonProps>(), {
+  color: 'success',
 })
+
+const store = useAppStore()
 </script>
 
 <style scoped lang="scss">
@@ -26,6 +26,14 @@ const props = withDefaults(defineProps<Props>(), {
   cursor: pointer;
   transition: all 0.3s ease;
   text-transform: none;
+
+  @media (max-width: 480px) {
+    padding: 6px 16px;
+  }
+
+  @media (max-width: 368px) {
+    padding: 4px 8px;
+  }
 
   &-success {
     background-color: #4caf50;
@@ -55,6 +63,11 @@ const props = withDefaults(defineProps<Props>(), {
       background-color: #e0a800;
       opacity: 0.9;
     }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 }
 </style>

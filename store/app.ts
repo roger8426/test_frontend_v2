@@ -7,15 +7,18 @@ import { validateForm, type ValidationError } from '@/utils/validate'
 export type DialogType = 'add' | 'update' | 'delete' | null
 
 export const useAppStore = defineStore('app', () => {
-  // 狀態
-  const formData = ref({
+  // 表單輸入值
+  const formData = ref<User>({
     name: '',
     age: '',
   })
-
+  // 列表數據
   const tableData = ref<User[]>([])
-  const editingIndex = ref<number | null>(null)
+  // 正在編輯的用戶 ID
+  const editingUserId = ref<number | string>('')
+  // 彈出框類型
   const dialogType = ref<DialogType>(null)
+  // 驗證錯誤
   const validationErrors = ref<ValidationError[]>([])
   const loading = ref(false)
 
@@ -26,7 +29,7 @@ export const useAppStore = defineStore('app', () => {
       age: '',
     }
     validationErrors.value = []
-    editingIndex.value = null
+    editingUserId.value = ''
   }
 
   // 驗證表單
@@ -36,10 +39,11 @@ export const useAppStore = defineStore('app', () => {
     return errors.length === 0
   }
 
-  // 新增
-  const addPerson = async (): Promise<boolean> => {
+  // 新增用戶
+  const addPerson = async () => {
     if (!validateFormData()) {
-      return false
+      console.error('驗證未通過，無法新增')
+      return
     }
 
     try {
@@ -47,12 +51,12 @@ export const useAppStore = defineStore('app', () => {
 
       const newPerson: User = {
         name: formData.value.name,
-        age: parseInt(formData.value.age),
-        id: tableData.value.length + 1,
+        age: Number(formData.value.age),
       }
 
+      // 調用 API - 實現後啟用
       await createUser(newPerson)
-      await getUserList()
+      await getDataList()
 
       resetForm()
       dialogType.value = null
@@ -65,75 +69,64 @@ export const useAppStore = defineStore('app', () => {
     }
   }
 
-  // 編輯（加載數據到表單）
-  const editPerson = (index: number): boolean => {
-    const person = tableData.value[index]
-    if (!person) {
-      return false
+  // 編輯（加載用戶數據到表單）
+  const editPerson = (userId: number) => {
+    const user = tableData.value.find((u) => u.id === userId)
+
+    if (!user) {
+      console.error('用戶未找到，無法編輯')
+      return
     }
 
-    editingIndex.value = index
+    editingUserId.value = userId
     formData.value = {
-      name: person.name,
-      age: person.age.toString(),
+      name: user.name,
+      age: user.age,
     }
     validationErrors.value = []
-    return true
   }
 
   // 更新（保存編輯結果）
-  const updatePerson = async (): Promise<boolean> => {
+  const updatePerson = async () => {
     if (!validateFormData()) {
+      console.error('驗證未通過，無法更新')
       return false
     }
 
     try {
       loading.value = true
 
-      if (editingIndex.value === null) {
-        return false
-      }
-
-      const person = tableData.value[editingIndex.value]
-      if (!person) {
+      if (!editingUserId.value) {
+        console.error('無效的用戶 ID')
         return false
       }
 
       const updatedPerson: User = {
-        ...person,
+        id: Number(editingUserId.value),
         name: formData.value.name,
-        age: parseInt(formData.value.age),
+        age: Number(formData.value.age),
       }
+      await updateUser(updatedPerson)
+      await getDataList()
 
-      // 調用 API
-      // await updateUser(person.id, updatedPerson)
-
-      tableData.value[editingIndex.value] = updatedPerson
       resetForm()
       dialogType.value = null
-      return true
     } catch (error) {
       console.error('更新失敗:', error)
-      return false
     } finally {
       loading.value = false
     }
   }
 
   // 刪除
-  const deletePerson = async (index: number): Promise<boolean> => {
+  const deletePerson = async (userId: number): Promise<boolean> => {
     try {
       loading.value = true
 
-      const person = tableData.value[index]
-      if (!person) {
-        return false
-      }
+      await deleteUser(userId)
+      await getDataList()
 
-      // 調用 API
-      // await deleteUser(person.id)
-
-      tableData.value.splice(index, 1)
+      resetForm()
       dialogType.value = null
       return true
     } catch (error) {
@@ -149,7 +142,6 @@ export const useAppStore = defineStore('app', () => {
     try {
       loading.value = true
       const data = await getUserList()
-      console.log(data)
 
       tableData.value = data.data
     } catch (error) {
@@ -163,7 +155,7 @@ export const useAppStore = defineStore('app', () => {
   return {
     formData,
     tableData,
-    editingIndex,
+    editingUserId,
     dialogType,
     validationErrors,
     loading,

@@ -24,7 +24,7 @@
             <EBtn @click="handleSwitchLanguage">{{ t('switchLanguage') }}</EBtn>
           </div>
           <div class="action">
-            <template v-if="store.editingIndex !== null">
+            <template v-if="store.editingUserId">
               <EBtn color="success" @click="openDialog('update')">{{ t('save') }}</EBtn>
               <EBtn color="warn" @click="handleCancel">{{ t('cancel') }}</EBtn>
             </template>
@@ -50,13 +50,17 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(item, index) in store.tableData" :key="index">
+              <tr v-for="(item, index) in store.tableData" :key="item.id">
                 <td>{{ index + 1 }}</td>
                 <td>{{ item.name }}</td>
                 <td>{{ item.age }}</td>
                 <td class="action-cell">
-                  <EBtn color="success" @click="handleEditRow(index)">{{ t('edit') }}</EBtn>
-                  <EBtn color="error" @click="openDialog('delete', index)">{{ t('delete') }}</EBtn>
+                  <EBtn color="success" @click="handleEditRow(item.id as number)">{{
+                    t('edit')
+                  }}</EBtn>
+                  <EBtn color="error" @click="openDialog('delete', item.id)">{{
+                    t('delete')
+                  }}</EBtn>
                 </td>
               </tr>
             </tbody>
@@ -71,13 +75,13 @@
     <!-- 確認對話框 -->
     <EDialog
       :is-open="store.dialogType !== null"
-      :title="getDialogTitle()"
+      :title="getDialogTitle"
       :confirm-text="t('save')"
       :cancel-text="t('cancel')"
       @confirm="handleDialogConfirm"
       @cancel="handleDialogCancel"
     >
-      {{ getDialogMessage() }}
+      {{ getDialogMessage }}
     </EDialog>
   </div>
 </template>
@@ -86,13 +90,15 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore, type DialogType } from '~/store/app'
+import type { ValidationError } from '~/utils/validate'
+import type { User } from '~/type/type'
 import EBtn from '~/components/EBtn.vue'
 import ETextField from '~/components/ETextField.vue'
 import EDialog from '~/components/EDialog.vue'
 
 const { t, locale } = useI18n()
 const store = useAppStore()
-const deleteIndex = ref<number | null>(null)
+const deleteUserId = ref<number | null>(null)
 
 // 初始化數據
 onMounted(() => {
@@ -101,37 +107,38 @@ onMounted(() => {
 
 // 獲取字段錯誤信息
 const getFieldError = (fieldName: string): string | null => {
-  const error = store.validationErrors.find(e => e.field === fieldName)
-  return error ? error.message : null
+  const error = store.validationErrors.find((e: ValidationError) => e.field === fieldName)
+  return error?.message ?? null
 }
 
 // 獲取 Dialog 標題
-const getDialogTitle = (): string => {
+const getDialogTitle = computed((): string => {
   if (!store.dialogType) return ''
-  const typeMap: Record<Exclude<DialogType, null>, string> = {
+  const typeMap: Record<string, string> = {
     add: t('confirmAdd'),
     update: t('confirmUpdate'),
-    delete: t('confirmDelete')
+    delete: t('confirmDelete'),
   }
-  return typeMap[store.dialogType]
-}
+  return typeMap[store.dialogType] || ''
+})
 
 // 獲取 Dialog 消息
-const getDialogMessage = (): string => {
+const getDialogMessage = computed((): string => {
   if (!store.dialogType) return ''
-  const messageMap: Record<Exclude<DialogType, null>, string> = {
+  const messageMap: Record<string, string> = {
     add: t('addWarning'),
     update: t('updateWarning'),
-    delete: t('deleteWarning')
+    delete: t('deleteWarning'),
   }
-  return messageMap[store.dialogType]
-}
+  return messageMap[store.dialogType] || ''
+})
 
 // 打開 Dialog
-const openDialog = (type: DialogType, index?: number) => {
+const openDialog = (type: DialogType, userId?: number) => {
   store.dialogType = type
-  if (type === 'delete' && index !== undefined) {
-    deleteIndex.value = index
+
+  if (userId) {
+    deleteUserId.value = userId
   }
 }
 
@@ -141,20 +148,20 @@ const handleDialogConfirm = async () => {
     await store.addPerson()
   } else if (store.dialogType === 'update') {
     await store.updatePerson()
-  } else if (store.dialogType === 'delete' && deleteIndex.value !== null) {
-    await store.deletePerson(deleteIndex.value)
-    deleteIndex.value = null
+  } else if (store.dialogType === 'delete' && deleteUserId.value) {
+    await store.deletePerson(deleteUserId.value)
+    deleteUserId.value = null
   }
 }
 
 // Dialog 取消
 const handleDialogCancel = () => {
   store.dialogType = null
-  deleteIndex.value = null
+  deleteUserId.value = null
 }
 
-const handleEditRow = (index: number) => {
-  store.editPerson(index)
+const handleEditRow = (id: number) => {
+  store.editPerson(id)
 }
 
 const handleCancel = () => {
@@ -290,6 +297,12 @@ const handleSwitchLanguage = () => {
   display: flex;
   justify-content: center;
   gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .action-cell {
+    flex-direction: column;
+  }
 }
 
 .no-data {

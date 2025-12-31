@@ -27,7 +27,7 @@ export const validateName = (name: string): string | null => {
  * 驗證年齡
  */
 export const validateAge = (age: string | number): string | null => {
-  if (age === '' || age === null || age === undefined) {
+  if (!age) {
     return 'Age is required'
   }
 

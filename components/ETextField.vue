@@ -13,15 +13,9 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
+import type { InputProps } from '~/type/type'
 
-interface Props {
-  id?: string // 若使用者有輸入，以使用者輸入的為主，若沒有請產出一個唯一 ID
-  label?: string
-  modelValue?: string | number
-  type?: string
-}
-
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<InputProps>(), {
   type: 'text'
 })
 
