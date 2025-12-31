@@ -1,5 +1,6 @@
 <template>
-  <button>
+  <button :class="['e-btn', `e-btn-${color}`]">
+    {{ text || '' }}
     <slot />
   </button>
 </template>
@@ -10,21 +11,50 @@ interface Props {
   color?: 'success' | 'error' | 'warn' // 預設為 success
 }
 
-const props = withDefaults(defineProps<Props>(), {})
+const props = withDefaults(defineProps<Props>(), {
+  color: 'success'
+})
 </script>
 
 <style scoped lang="scss">
 .e-btn {
-  // success 綠
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: none;
+
   &-success {
+    background-color: #4caf50;
+    color: #fff;
+
+    &:hover {
+      background-color: #45a049;
+      opacity: 0.9;
+    }
   }
 
-  // error 紅
   &-error {
+    background-color: #f44336;
+    color: #fff;
+
+    &:hover {
+      background-color: #da190b;
+      opacity: 0.9;
+    }
   }
 
-  // warn 黃
   &-warn {
+    background-color: #ffc107;
+    color: #333;
+
+    &:hover {
+      background-color: #e0a800;
+      opacity: 0.9;
+    }
   }
 }
 </style>
